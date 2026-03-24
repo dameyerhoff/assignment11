@@ -4,57 +4,63 @@ import { revalidatePath } from "next/cache";
 import { VoteButtons } from "./VoteButtons";
 
 async function getExistingVote(userId, postId) {
+  if (!userId) return null;
   const { rows: existingVotes } = await db.query(
     "SELECT * FROM votes WHERE user_id = $1 AND post_id = $2 LIMIT 1",
-    [userId, postId]
+    [userId, postId],
   );
 
   return existingVotes?.[0];
 }
 
 async function handleVote(userId, postId, newVote) {
-  // Check if the user has already voted on this post
-  if (!userId) {
-    throw new Error("Cannot vote without being logged in");
-  }
+  if (!userId) return; // Silent fail if no user (Login button handles the prompt)
 
   const existingVote = await getExistingVote(userId, postId);
 
-  if (existingVote) {
-    if (existingVote.vote === newVote) {
-      // User is toggling their vote, so remove it
-      await db.query("DELETE FROM votes WHERE id = $1", [existingVote.id]);
+  try {
+    if (existingVote) {
+      if (existingVote.vote === newVote) {
+        // User is toggling their vote off
+        await db.query("DELETE FROM votes WHERE id = $1", [existingVote.id]);
+      } else {
+        // User is switching from up to down (or vice versa)
+        await db.query("UPDATE votes SET vote = $1 WHERE id = $2", [
+          newVote,
+          existingVote.id,
+        ]);
+      }
     } else {
-      // Update the existing vote
-      await db.query("UPDATE votes SET vote = $1 WHERE id = $2", [
-        newVote,
-        existingVote.id,
-      ]);
+      // New vote - the UNIQUE constraint in SQL prevents duplicates here
+      await db.query(
+        "INSERT INTO votes (user_id, post_id, vote, vote_type) VALUES ($1, $2, $3, 'post')",
+        [userId, postId, newVote],
+      );
     }
-  } else {
-    // Insert a new vote
-    await db.query(
-      "INSERT INTO votes (user_id, post_id, vote, vote_type) VALUES ($1, $2, $3, 'post')",
-      [userId, postId, newVote]
-    );
+  } catch (error) {
+    console.error("Database rejected vote:", error.message);
+    // Gracefully catch any UNIQUE constraint violations
   }
 
-  // revalidatePath("/");
   revalidatePath(`/post/${postId}`);
+  revalidatePath("/");
 }
 
 export async function Vote({ postId, votes }) {
   const session = await auth();
-  const existingVote = await getExistingVote(session?.user?.id, postId);
+  const userId = session?.user?.id;
+  const existingVote = await getExistingVote(userId, postId);
 
   async function upvote() {
     "use server";
-    await handleVote(session?.user?.id, postId, 1);
+    if (!userId) return;
+    await handleVote(userId, postId, 1);
   }
 
   async function downvote() {
     "use server";
-    await handleVote(session?.user?.id, postId, -1);
+    if (!userId) return;
+    await handleVote(userId, postId, -1);
   }
 
   return (
@@ -66,41 +72,6 @@ export async function Vote({ postId, votes }) {
           votes={votes}
           existingVote={existingVote}
         />
-        {/* <button formAction={upvote}>
-          {existingVote?.vote === 1 ? (
-            <TbArrowBigUpFilled
-              size={24}
-              className={clsx("hover:text-orange-600", {
-                "text-pink-300": existingVote?.vote === 1,
-              })}
-            />
-          ) : (
-            <TbArrowBigUp
-              size={24}
-              className={clsx("hover:text-orange-600", {
-                "text-pink-300": existingVote?.vote === 1,
-              })}
-            />
-          )}
-        </button>
-        <span className="w-6 text-center tabular-nums">{votes}</span>
-        <button formAction={downvote}>
-          {existingVote?.vote === -1 ? (
-            <TbArrowBigDownFilled
-              size={24}
-              className={clsx("hover:text-blue-600", {
-                "text-blue-300": existingVote?.vote === -1,
-              })}
-            />
-          ) : (
-            <TbArrowBigDown
-              size={24}
-              className={clsx("hover:text-blue-600", {
-                "text-blue-300": existingVote?.vote === -1,
-              })}
-            />
-          )}
-        </button> */}
       </form>
     </>
   );

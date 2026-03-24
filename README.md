@@ -1,48 +1,36 @@
-## Upvote
+Project Reflection
+🎯 Requirements Met & Goals Achieved
 
-Upvote is a Reddit-esque web application that allows users to create posts, upvote and downvote posts, and comment on posts in a multi-threaded, nested list.
+One Vote Per Person:
+I changed the database rules so that the computer remembers if a user has already voted. If they try to vote again on the same post, the database says no to keep things fair.
 
-The project is built using Next.js with the /app router and [Tailwind CSS](https://tailwindcss.com/), and uses [Auth.js (formerly Next Auth)](https://authjs.dev/) for user authentication. The data is stored in a Postgres database, which is created and accessed with raw SQL queries using the `pg` package.
+Smart Voting Buttons:
+I wrote the code so that if you click upvote twice, it cancels your vote out. It also lets you switch from an upvote to a downvote easily.
 
-The project is a work in progress and is not yet complete.
+Browser Tab Names:
+I made it so the little tab at the top of the internet browser changes to show the name of the post you are looking at.
 
-## Features
+Safe Login:
+I set up a handshake with GitHub so people can log in safely using their own accounts.
 
-- [x] View a list of posts
-- [x] View a single post
-- [x] Create a post
-- [x] Upvote and downvote posts
-- [x] Pagination of posts
-- [x] Comment on posts
-- [x] Nested comments (recursive lists)
-- [x] User authentication
+Database Setup:
+I built all the tables (the lists where the computer saves info) for users, posts, comments, and votes.
 
-## Setup instructions
+🎯 Difficulties Encountered
 
-1. Fork the repository (check "copy the main branch only") and clone your fork to your local machine
-2. Run `npm install`
-3. Create a `.env.local` file in the root directory and add the following environment variables:
-   - `DATABASE_URL` - the URL of your Postgres database (eg. the Supabase connection string)
-   - `AUTH_SECRET` - the Next Auth secret string (this can be anything at all like a password, but keep it secret!)
-   - `AUTH_GITHUB_ID` - the GitHub OAuth client ID (create yours in [Github developer settings](https://github.com/settings/developers)
-   - `AUTH_GITHUB_SECRET` - the GitHub OAuth client secret (create this in [Github developer settings](https://github.com/settings/developers))
-4. Create the database schema by running the SQL commands in `schema.sql` in your database (eg. by running the commands in Supabase Query Editor)
-5. Run `npm run dev` to start the development server
-6. Open [http://localhost:3000](http://localhost:3000) with your browser to see the site
+Database Rules:
+It was a bit tricky at first to make the database understand that it should only allow one vote per person. I had to use a special Unique rule to stop the infinite voting bug.
 
-## Potential future features
+Code Grammar:
+I had some trouble with syntax errors where the computer didn't understand my instructions because of a tiny mistake in the file type, but I fixed those by cleaning up the code.
 
-- [ ] User profiles
-- [ ] Sorting posts by recent (date posted), top (most upvotes), and most controversial (most upvotes _and_ downvotes)
-- [ ] User karma scores
-- [ ] User badges / trophies (awards for achievements like number of posts, years on the site, etc.)
-- [ ] User settings (eg. number of posts per page, theme, etc.)
-- [ ] Moderation tools / reporting or flagging objectionable comments for removable by admins
-- [ ] Searching posts (possibly using simple SQL LIKE '%some search%', or [Postgres text search](https://www.crunchydata.com/blog/postgres-full-text-search-a-search-engine-in-a-database))
-- [ ] Subreddits (separate communities, that isn't just one big list of posts, that can be created by users)
-- [ ] User notifications
-- [ ] User private messaging
-- [ ] User blocking
-- [ ] User following
-- [ ] User feed (posts from users you follow)
-- [ ] User flair
+🏹 Extra Reflections
+
+What went well:
+The GitHub login works perfectly, and it is really cool to see my own profile picture appear on the website.
+
+What could have gone better:
+I spent a lot of time fixing small errors in the page titles, but now that I know how metadata works, it feels much easier.
+
+Bugs encountered:
+I ran into a bug where the whole website would crash if someone tried to vote twice. I fixed this by telling the code to catch the error and stay calm instead of breaking.
